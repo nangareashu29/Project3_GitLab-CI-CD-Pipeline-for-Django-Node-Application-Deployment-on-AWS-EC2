@@ -1,0 +1,49 @@
+image: ashu2903/node-app-batch-6
+services:
+  - docker:ashu2903/node-app-batch-6
+
+stages:
+  - build
+  - test
+  - release
+  - deploy
+
+variables:
+   
+  CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  CONTAINER_RELEASE_IMAGE: $node-app-batch-6:latest
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+
+
+build:
+  stage: build
+  script:
+    - docker build -t $node-app-batch-6 .
+    - docker push $node-app-batch-6
+
+test:
+  stage: test
+  script:
+    - docker pull $node-app-batch-6
+    - docker run $node-app-batch-6 npm test
+
+
+release-image:
+  stage: release
+  script:
+    - docker pull $node-app-batch-6
+    - docker tag $node-app-batch-6 $node-app-batch-6:latest
+    - docker push $node-app-batch-6:latest
+  
+
+deploy:
+  stage: deploy
+  tags:
+    - local_docker
+  script:
+    - docker pull $node-app-batch-6
+    - docker run -d -p 3000:3000 $node-app-batch-6:latest
+  
